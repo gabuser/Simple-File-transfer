@@ -18,6 +18,6 @@ def searchfile(file:str,path:list) ->str| bool:
         else:
             endlist = halfstart -1
     
-    return False
+    return f'arquivo não foi encontrado'
 
 #print(searchfile('.py',path=getcwd()))

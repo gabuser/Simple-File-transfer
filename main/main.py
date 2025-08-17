@@ -6,14 +6,16 @@ import asyncio
 
 paths = getcwd()
 
-directory = chdir(f"{paths}/main/utils")
+#directory = chdir(f"{paths}/main/utils")
+directory = input("inset the path u want to copy file:")
+chdir(directory)
 listsfiles = listdir(directory)
 current_path = getcwd()
 
 async def block(datas:str,lists:list,dire:str):
     data = await asyncio.to_thread(binarysearch.searchfile,datas, lists)
 
-    value = await asyncio.to_thread(checkingfile.checking,dire,datas)
+    value = await asyncio.to_thread(checkingfile.checking,dire,data)
     print(data)
     print(value)
 
