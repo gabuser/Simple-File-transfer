@@ -5,9 +5,9 @@ exists = binarysearch.searchfile('ut',paths)
 
 print(path.isfile(exists))"""
 
-def checking(paths:str,files="")->str|bool:
+def checking(paths:str,files="")->bool:
     if(files):
-        print(f"{paths}\{files}")
+        #print(f"{paths}\{files}")
         return path.isfile(f"{paths}\{files}")
     
 """

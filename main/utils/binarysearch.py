@@ -10,7 +10,7 @@ def searchfile(file:str,path:list) ->str| bool:
         foundfile = (fileslists[halfstart])
 
         if(foundfile == file):
-            return foundfile
+            return file
         
         if(foundfile <file):
             starts = halfstart+1
