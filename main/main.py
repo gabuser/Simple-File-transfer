@@ -20,27 +20,49 @@ listqueue = asyncio.Queue()
 class server:
     async def block_search(self,lists:list):
         self.data = await asyncio.to_thread(binarysearch.searchfile,self.inputed, lists)
-        self.order = self.data.split(" ")
+        #print(self.data)
+        #self.order = self.data.split(" ")
 
-    async def block_cheking(self,values:list|str, dire:str):
-        
-        for value in values:
-            await listqueue.put(value)
-        
-        for _ in range(len(values)):
-            self.value = await asyncio.to_thread(checkingfile.checking,dire,await listqueue.get())
+    async def block_cheking(self,option:str,values:list|str, dire:str):
 
-            if(self.value):
-                await chekedqueue.put(self.value)
+        self.inputed = values
+
+        if(self.inputed):
+            for value in values:
+                await listqueue.put(value)
+        
+            for _ in range(len(values)):
+                self.value = await asyncio.to_thread(checkingfile.checking,dire,await listqueue.get())
+
+                if(self.value):
+                    await chekedqueue.put(self.value)
+
+        #self.inputed="q"
+            match(option):
+
+                case "1":
+                    if(self.inputed == "q"):
+                        await chekedqueue.put(None)
+            
+                case "2":
+                    await chekedqueue.put(None)
+        else:
+          await chekedqueue.put(False)
 
     async def reading(self):
         self.recived = await chekedqueue.get()
 
-        if(self.recived is not None):
-            async with aiofiles.open(self.recived,"rb") as opening:
-                readingmode = await opening.read()
-                await readingqueue.put((self.recived,readingmode))
-                print(readingqueue)
+        match(self.recived):
+            case self.recived if(self.recived is not None and 
+                                 self.recived ):
+                    
+                    async with aiofiles.open(self.recived,"rb") as opening:
+                        readingmode = await opening.read()
+                        await readingqueue.put((self.recived,readingmode))
+                        print(readingqueue)
+            
+            case self.recived if(type(self.recived) is bool):
+                print("file not found")
                 
     async def main(self):
         choice= input("1: select one file each \n 2: choose all file \n 3: q to quit:")
@@ -50,17 +72,18 @@ class server:
                 while True:
                     self.inputed = input("insert a file:")
                     await asyncio.gather(self.block_search(listsfiles))
-                    await asyncio.gather(self.block_cheking(self.order, current_path),self.reading())
-                    #await asyncio.gather(self.reading())
-                    #await self.block(listsfiles,current_path)
-                    #await self.reading(self.data)
-        
+                    await asyncio.gather(self.block_cheking(choice,self.data, current_path),self.reading())
+
+                    if(self.recived is None):
+                        break
+                    
+                    if(self.recived == False):
+                        continue
             case '2':
-                await asyncio.gather(self.block_cheking(listsfiles, current_path))
+                #await asyncio.gather(self.block_cheking(choice,listsfiles, current_path))
 
                 while True:
-                    await asyncio.gather(self.reading())
-
+                    await asyncio.gather(self.reading(), self.block_cheking(choice,listsfiles,current_path))
                     if(self.recived is None):
                         break
 running= server()
