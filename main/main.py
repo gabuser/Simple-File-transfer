@@ -16,6 +16,7 @@ corroutine:list
 readingqueue = asyncio.Queue()
 chekedqueue= asyncio.Queue()
 listqueue = asyncio.Queue()
+sentinel = asyncio.Queue()
 
 class server:
     async def block_search(self,lists:list):
@@ -36,19 +37,22 @@ class server:
 
                 if(self.value):
                     await chekedqueue.put(self.value)
-
+                
         #self.inputed="q"
             match(option):
 
                 case "1":
                     if(self.inputed == "q"):
                         await chekedqueue.put(None)
-            
+                    
+                    if(not self.value):
+                        await chekedqueue.put(False)
                 case "2":
                     await chekedqueue.put(None)
         else:
-          await chekedqueue.put(False)
+         await chekedqueue.put(False)
 
+        #print(chekedqueue)
     async def reading(self):
         self.recived = await chekedqueue.get()
 
@@ -62,7 +66,7 @@ class server:
                         print(readingqueue)
             
             case self.recived if(type(self.recived) is bool):
-                print("file not found")
+                print(f"\n file not found or is a folder")
                 
     async def main(self):
         choice= input("1: select one file each \n 2: choose all file \n 3: q to quit:")
@@ -73,17 +77,16 @@ class server:
                     self.inputed = input("insert a file:")
                     await asyncio.gather(self.block_search(listsfiles))
                     await asyncio.gather(self.block_cheking(choice,self.data, current_path),self.reading())
-
+                    
                     if(self.recived is None):
                         break
                     
-                    if(self.recived == False):
-                        continue
+
             case '2':
-                #await asyncio.gather(self.block_cheking(choice,listsfiles, current_path))
+                await asyncio.gather(self.block_cheking(choice,listsfiles, current_path))
 
                 while True:
-                    await asyncio.gather(self.reading(), self.block_cheking(choice,listsfiles,current_path))
+                    await asyncio.gather(self.reading())
                     if(self.recived is None):
                         break
 running= server()
