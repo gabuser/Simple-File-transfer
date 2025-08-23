@@ -6,9 +6,10 @@ exists = binarysearch.searchfile('ut',paths)
 print(path.isfile(exists))"""
 
 def checking(paths:str,files="")->bool:
-    if(files):
-        #print(f"{paths}\{files}")
-        return path.isfile(f"{paths}\{files}")
+    filters = path.isfile(f"{paths}\{files}")
+    
+    if(filters):
+        return files
     
 """
 algoritmo de busca binária será reutilizada duas vezes, a primeira vez iremos usar para buscar os arquivos que o usuário que mandar para outro dispositivo 
