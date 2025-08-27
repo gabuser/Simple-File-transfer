@@ -12,7 +12,7 @@ directory = input("inset the path u want to copy file:")
 chdir(directory)
 listsfiles = listdir(directory)
 current_path = getcwd()
-corroutine:list
+corroutine = list()
 readingqueue = asyncio.Queue()
 chekedqueue= asyncio.Queue()
 listqueue = asyncio.Queue()
@@ -54,21 +54,27 @@ class server:
 
         #print(chekedqueue)
     async def reading(self):
-        self.recived = await chekedqueue.get()
 
-        match(self.recived):
-            case self.recived if(self.recived is not None and 
-                                 self.recived ):
+        recived = await chekedqueue.get()
+
+        match(recived):
+            case recived if(recived is not None and 
+                                 recived ):
                     
-                    async with aiofiles.open(self.recived,"rb") as opening:
+                    async with aiofiles.open(recived,"rb") as opening:
                         readingmode = await opening.read()
-                        await readingqueue.put((self.recived,readingmode))
-                        print(readingqueue)
+                        await readingqueue.put((recived,readingmode))
+                        #print(readingqueue)
             
-            case self.recived if(type(self.recived) is bool):
+            case recived if(type(recived) is bool):
                 print(f"\n file not found or is a folder")
-                
+            
+            case recived if(recived is None):
+                await sentinel.put(None)
+            
     async def main(self):
+        #global corroutine
+
         choice= input("1: select one file each \n 2: choose all file \n 3: q to quit:")
 
         match(choice):
@@ -76,20 +82,23 @@ class server:
                 while True:
                     self.inputed = input("insert a file:")
                     await asyncio.gather(self.block_search(listsfiles))
+                    
                     await asyncio.gather(self.block_cheking(choice,self.data, current_path),self.reading())
-                    
-                    if(self.recived is None):
-                        break
-                    
 
+                    #awaiting_response = await sentinel.get()#problema aqui
+
+                    if(self.inputed == "q"):
+                        break
             case '2':
                 await asyncio.gather(self.block_cheking(choice,listsfiles, current_path))
 
-                while True:
-                    await asyncio.gather(self.reading())
-                    if(self.recived is None):
-                        break
+                #while True:
+                for _ in range(4):
+                    corroutine.append(self.reading())
+                
+                await asyncio.gather(*corroutine)
+
 running= server()
 
 asyncio.run(running.main())
-    
+print(readingqueue)
