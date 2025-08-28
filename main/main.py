@@ -1,5 +1,6 @@
 from utils import binarysearch
 from utils import checkingfile
+from utils import chunks
 from os import chdir,listdir,getcwd
 from os import path
 import asyncio 
@@ -13,10 +14,12 @@ chdir(directory)
 listsfiles = listdir(directory)
 current_path = getcwd()
 corroutine = list()
+corroutine2 = list()
 readingqueue = asyncio.Queue()
 chekedqueue= asyncio.Queue()
 listqueue = asyncio.Queue()
 sentinel = asyncio.Queue()
+kb = 0
 
 class server:
     async def block_search(self,lists:list):
@@ -62,7 +65,7 @@ class server:
                                  recived ):
                     
                     async with aiofiles.open(recived,"rb") as opening:
-                        readingmode = await opening.read()
+                        readingmode = await opening.read(8192)
                         await readingqueue.put((recived,readingmode))
                         #print(readingqueue)
             
@@ -71,7 +74,15 @@ class server:
             
             case recived if(recived is None):
                 await sentinel.put(None)
-            
+
+    async def consumer(self):
+        global kb
+
+        while True:
+            files = await readingqueue.get()
+            kb+=2
+            await asyncio.to_thread(chunks.chunking,files[1],kb)
+
     async def main(self):
         #global corroutine
 
@@ -98,7 +109,11 @@ class server:
                 
                 await asyncio.gather(*corroutine)
 
+                for _ in range(5):
+                    corroutine2.append(self.consumer())
+                await asyncio.gather(*corroutine2)
+
 running= server()
 
 asyncio.run(running.main())
-print(readingqueue)
+#print(readingqueue)
