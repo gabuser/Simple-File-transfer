@@ -1,5 +1,6 @@
 from utils import binarysearch
 from utils import checkingfile
+from utils import chunks
 from os import chdir,listdir,getcwd
 from os import path
 import asyncio 
@@ -12,11 +13,13 @@ directory = input("inset the path u want to copy file:")
 chdir(directory)
 listsfiles = listdir(directory)
 current_path = getcwd()
-corroutine:list
+corroutine = list()
+corroutine2 = list()
 readingqueue = asyncio.Queue()
 chekedqueue= asyncio.Queue()
 listqueue = asyncio.Queue()
 sentinel = asyncio.Queue()
+kb = 2
 
 class server:
     async def block_search(self,lists:list):
@@ -54,21 +57,35 @@ class server:
 
         #print(chekedqueue)
     async def reading(self):
-        self.recived = await chekedqueue.get()
 
-        match(self.recived):
-            case self.recived if(self.recived is not None and 
-                                 self.recived ):
+        recived = await chekedqueue.get()
+
+        match(recived):
+            case recived if(recived is not None and 
+                                 recived ):
                     
-                    async with aiofiles.open(self.recived,"rb") as opening:
-                        readingmode = await opening.read()
-                        await readingqueue.put((self.recived,readingmode))
-                        print(readingqueue)
+                    async with aiofiles.open(recived,"rb") as opening:
+                        readingmode = await opening.read(8192)
+                        await readingqueue.put((recived,readingmode))
+                        #print(readingqueue)
             
-            case self.recived if(type(self.recived) is bool):
+            case recived if(type(recived) is bool):
                 print(f"\n file not found or is a folder")
-                
+            
+            case recived if(recived is None):
+                await sentinel.put(None)
+
+    async def consumer(self):
+        global kb
+
+        while True:
+            files = await readingqueue.get()
+            #kb+=2
+            await asyncio.to_thread(chunks.chunking,files[1],files[0],kb)
+
     async def main(self):
+        #global corroutine
+
         choice= input("1: select one file each \n 2: choose all file \n 3: q to quit:")
 
         match(choice):
@@ -76,20 +93,27 @@ class server:
                 while True:
                     self.inputed = input("insert a file:")
                     await asyncio.gather(self.block_search(listsfiles))
+                    
                     await asyncio.gather(self.block_cheking(choice,self.data, current_path),self.reading())
-                    
-                    if(self.recived is None):
-                        break
-                    
 
+                    #awaiting_response = await sentinel.get()#problema aqui
+
+                    if(self.inputed == "q"):
+                        break
             case '2':
                 await asyncio.gather(self.block_cheking(choice,listsfiles, current_path))
 
-                while True:
-                    await asyncio.gather(self.reading())
-                    if(self.recived is None):
-                        break
+                #while True:
+                for _ in range(4):
+                    corroutine.append(self.reading())
+                    #corroutine.append(self.consumer())
+                await asyncio.gather(*corroutine)
+
+                #for _ in range(1):
+                    #corroutine2.append(self.consumer())
+                await asyncio.gather(self.consumer())
+
 running= server()
 
 asyncio.run(running.main())
-    
+#print(readingqueue)
