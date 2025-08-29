@@ -1,5 +1,5 @@
 
-def chunking(queues,kb:int):
+def chunking(queues,names,kb:int):
 
     for c in range(0,len(queues),kb):
-        print(queues[c:c+kb])
+        print(names,queues[c:c+kb])

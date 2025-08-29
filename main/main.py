@@ -19,7 +19,7 @@ readingqueue = asyncio.Queue()
 chekedqueue= asyncio.Queue()
 listqueue = asyncio.Queue()
 sentinel = asyncio.Queue()
-kb = 0
+kb = 2
 
 class server:
     async def block_search(self,lists:list):
@@ -80,8 +80,8 @@ class server:
 
         while True:
             files = await readingqueue.get()
-            kb+=2
-            await asyncio.to_thread(chunks.chunking,files[1],kb)
+            #kb+=2
+            await asyncio.to_thread(chunks.chunking,files[1],files[0],kb)
 
     async def main(self):
         #global corroutine
@@ -106,12 +106,12 @@ class server:
                 #while True:
                 for _ in range(4):
                     corroutine.append(self.reading())
-                
+                    #corroutine.append(self.consumer())
                 await asyncio.gather(*corroutine)
 
-                for _ in range(5):
-                    corroutine2.append(self.consumer())
-                await asyncio.gather(*corroutine2)
+                #for _ in range(1):
+                    #corroutine2.append(self.consumer())
+                await asyncio.gather(self.consumer())
 
 running= server()
 
