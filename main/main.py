@@ -19,6 +19,8 @@ readingqueue = asyncio.Queue()
 chekedqueue= asyncio.Queue()
 listqueue = asyncio.Queue()
 sentinel = asyncio.Queue()
+consumer = asyncio.Queue()
+
 kb = 2
 
 class server:
@@ -51,6 +53,8 @@ class server:
                     if(not self.value):
                         await chekedqueue.put(False)
                 case "2":
+                    #needs to be fixed
+                    #for _ in range(3):
                     await chekedqueue.put(None)
         else:
          await chekedqueue.put(False)
@@ -73,16 +77,27 @@ class server:
                 print(f"\n file not found or is a folder")
             
             case recived if(recived is None):
-                await sentinel.put(None)
+                #await sentinel.put(None)
+                 for _ in range(3):
+                  await sentinel.put(None)
 
     async def consumer(self):
         global kb
 
         while True:
             files = await readingqueue.get()
+            sentinels = await sentinel.get()
+            print(sentinels)
             #kb+=2
-            await asyncio.to_thread(chunks.chunking,files[1],files[0],kb)
-
+            for c in await asyncio.to_thread(chunks.chunking,files[1],files[0],kb):
+                await consumer.put(c)
+            
+            if(sentinels is None):
+                break
+    
+    async def producer(self):
+        while True:
+            print(await consumer.get() )
     async def main(self):
         #global corroutine
 
@@ -109,11 +124,15 @@ class server:
                     #corroutine.append(self.consumer())
                 await asyncio.gather(*corroutine)
 
-                #for _ in range(1):
-                    #corroutine2.append(self.consumer())
-                await asyncio.gather(self.consumer())
+                for _ in range(3):
+                    corroutine2.append(self.consumer())
+                    corroutine2.append(self.producer())
+                
+                await asyncio.gather(*corroutine2)
+                #await asyncio.gather(self.producer())
+                
 
 running= server()
 
 asyncio.run(running.main())
-#print(readingqueue)
+#print(consumer)
