@@ -85,19 +85,27 @@ class server:
         global kb
 
         while True:
+            print(readingqueue)
             files = await readingqueue.get()
             sentinels = await sentinel.get()
-            print(sentinels)
+            #print(files[1])
+            #print(readingqueue)
             #kb+=2
-            for c in await asyncio.to_thread(chunks.chunking,files[1],files[0],kb):
-                await consumer.put(c)
+            
+            #for c in await asyncio.to_thread(chunks.chunking,files[1],files[0],kb):
+            for c in range(0,len(files[1]),kb):
+
+                await consumer.put((files[0],files[1][c:c+kb]))
             
             if(sentinels is None):
                 break
     
     async def producer(self):
         while True:
-            print(await consumer.get() )
+            value = await consumer.get()
+            print(value)
+            #print(value.index(value[1]))
+            #print(value[1])
     async def main(self):
         #global corroutine
 
@@ -126,13 +134,17 @@ class server:
 
                 for _ in range(3):
                     corroutine2.append(self.consumer())
-                    corroutine2.append(self.producer())
+                    #corroutine2.append(self.producer())
                 
-                await asyncio.gather(*corroutine2)
+                await asyncio.gather(*corroutine2, self.producer())
                 #await asyncio.gather(self.producer())
                 
 
 running= server()
 
 asyncio.run(running.main())
-#print(consumer)
+#print(readingqueue)
+
+#melhorar chunk, atualmente está totalmente simplificada, rodando apenas em uma core, o que garante a ordem das chunks dos arquivos, mas altera a parformace ao decorrer do tempo.
+#garantir o offset das chunks, de tal forma que quando chegar no dispositivo B, ele possa reorganziar a ordem das chunks para fazer a reconstrução dos dados.
+#melhorar o modelo de produtor consumidor
