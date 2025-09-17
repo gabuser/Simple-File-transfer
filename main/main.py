@@ -11,7 +11,7 @@ import aiofiles
 #directory = chdir(f"{paths}/main/utils")
 directory = input("inset the path u want to copy file:")
 chdir(directory)
-listsfiles = listdir(directory)
+listsfiles = iter(listdir(directory))
 current_path = getcwd()
 corroutine = list()
 corroutine2 = list()
@@ -38,17 +38,22 @@ class server:
                 if(self.inputed and self.inputed != "q"):
                     await listqueue.put(self.inputed)
                     #encerrar as corroutines de forma segura
-                    await listqueue.put(None)
+                await listqueue.put(None)
         
                 #else:
                  #   await listqueue.put(None)
             
             case "2":
-                for value in values:
-                    await listqueue.put(value)
+                while True:
+                    try:
+                        value = next(listsfiles)
+                        await listqueue.put(value)
+                    
+                    except StopIteration:
+                        #await listqueue.put(None)
+                        break
+                #print(listqueue)
                 #lembrete de gerenciar as corroutines para que possam ser encerradas de forma segura
-
-                await listqueue.put(None)
             #for _ in range(len(values)):
                 #self.value = await asyncio.to_thread(checkingfile.checking,dire,await listqueue.get())
 
@@ -58,21 +63,36 @@ class server:
         #self.inputed="q"
     
     async def chekingfiles(self, dire:str):
-        while True:
-            tobecheck= await listqueue.get()
-
-            cheked = await asyncio.to_thread(checkingfile.checking, dire, tobecheck )
-
-            if(cheked):
-                await chekedqueue.put(cheked) 
+        #lenghts = listqueue.qsize()
+        #while True:
+        #tobecheck= await listqueue.get()
+        #for _ in range(lenghts):
+        #listqueue.task_done()
+        #value=await listqueue.get()
+        #print(value)
             
-            if(tobecheck is None):
-                await chekedqueue.put(None)
-                break
+        #print(listqueue)
+        #print(chekedqueue)
+        #print(lenghts)
+        while True:
+            #print(listqueue.task_done())
+            tobecheck = await listqueue.get()
+            listqueue.task_done()
+            cheked = await asyncio.to_thread(checkingfile.checking, dire, tobecheck )
+            #await chekedqueue.put(cheked)
+            
+            if(cheked and cheked is not None):
+                await chekedqueue.put(cheked)
+            
 
-    #async def consumer(self):
-     #       pass
-            """match(option):
+            if(tobecheck is None):
+                #listqueue.task_done()
+                break
+            #print(listqueue)
+        
+        print(listqueue)
+
+    """match(option):
 
                 case "1":
                     if(self.inputed == "q"):
@@ -89,33 +109,39 @@ class server:
          await chekedqueue.put(False)"""
 
         #print(chekedqueue)
-    async def reading(self):
-     while True:    
-        recived = await chekedqueue.get()
-        print(recived)
-
-        match(recived):
-            case recived if(recived is not None and 
+    async def reading(self,corroutine=1):
+        while True:    
+            recived = await chekedqueue.get()
+            
+            match(recived):
+                case recived if(recived is not None and
                                  recived ):
                     
-                    async with aiofiles.open(recived,"rb") as opening:
-                        readingmode = await opening.read(8192)
-                        await readingqueue.put((recived,readingmode))
+                        async with aiofiles.open(recived,"rb") as opening:
+                            readingmode = await opening.read(8192)
+                            await readingqueue.put((recived,readingmode))
+                        print(readingqueue)
             
-            case recived if(type(recived) is bool):
-                print(f"\n file not found or is a folder")
+                case recived if(type(recived) is bool):
+                    print(f"\n file not found or is a folder")
             
-            case recived if(recived is None):
-                  print(True)
-                  await sentinel.put(None)
-                  break
+                case recived if(recived is None):
+                    for _ in range(corroutine):
+                        #await chekedqueue.put(None)
+                        await sentinel.put(None)
+                        #print(sentinel)
+                    break
 
-    async def chunking(self):
+        print(sentinel)
+    
+
+    async def chunking(self,corroutine=1):
         global kb
 
         while True:
             files = await readingqueue.get()
-            sentinels = await sentinel.get()
+            #sentinels = await sentinel.get()
+            #print(sentinels)
             #print(files[1])
             #print(readingqueue)
             #kb+=2
@@ -125,8 +151,11 @@ class server:
 
                 await consumer.put((files[0],files[1][c:c+kb]))
             
-            if(sentinels is None):
-                await consumer.put(None)
+            if(files is None):
+                print(consumer)
+                for _ in range(corroutine):
+                    await consumer.put(None)
+                    print(consumer)
                 break
     
     async def sending(self):
@@ -135,14 +164,14 @@ class server:
                 print(value)
 
                 if(value is None):
-                    break
+                  break
 
 
             #print(value.index(value[1]))
             #print(value[1])
     async def main(self):
         #global corroutine
-
+        
         choice= input("1: select one file each \n 2: choose all file \n 3: q to quit:")
 
         match(choice):
@@ -155,17 +184,58 @@ class server:
                     
                     await asyncio.gather(self.chekingfiles(current_path))
                     await asyncio.gather(self.reading())
-                    await asyncio.gather(self.chunking())
+                    #await asyncio.gather(self.chunking())
                     #print(consumer)
-                    await asyncio.gather(self.sending())
+                    #await asyncio.gather(self.sending())
                     #await asyncio.gather(self.block_cheking(choice,self.data, current_path),self.reading())
 
                     #awaiting_response = await sentinel.get()#problema aqui
 
                     if(self.inputed == "q"):
                         break
+            
             case '2':
-                await asyncio.gather(self.block_cheking(choice,listsfiles, current_path))
+                producers= list()
+                consumers = list()
+                readers = list()
+                chunkers = list()
+                senders = list()
+
+                
+                for _ in range(5):
+                    producers.append(self.producer(listsfiles,choice))
+                
+                #await asyncio.gather(*producers)
+                #await asyncio.gather(self.chekingfiles(current_path))
+                
+                a = 5
+                for _ in range(5):
+                   consumers.append(self.chekingfiles(current_path))
+                #for _ in range(a):
+                 #   readers.append(self.reading(a))
+                
+                #await asyncio.gather(*readers)
+
+                #for _ in range(a):
+                 #  chunkers.append(self.chunking(a))
+                
+                #await asyncio.gather(*chunkers)
+
+                #for _ in range(_):
+                 #   senders.append(self.sending())
+                
+                await asyncio.gather(*producers)
+                for _ in range(5):
+                    await listqueue.put(None)
+                
+                await asyncio.gather(*readers)
+
+                #await asyncio.gather(self.chekingfiles(current_path))
+                #await asyncio.gather(self.chekingfiles(current_path))
+                #await asyncio.gather(*readers)
+                #await asyncio.gather(*chunkers)
+                #await asyncio.gather(*senders)
+                """await asyncio.gather(self.block_cheking(choice,listsfiles, current_path))
 
                 #while True:
                 for _ in range(9):
@@ -178,7 +248,7 @@ class server:
                     corroutine2.append(self.producer())
                 
                 await asyncio.gather(*corroutine2, self.producer())
-                #await asyncio.gather(self.producer())
+                #await asyncio.gather(self.producer())"""
                 
 
 running= server()
@@ -189,3 +259,6 @@ asyncio.run(running.main())
 #melhorar chunk, atualmente está totalmente simplificada, rodando apenas em uma core, o que garante a ordem das chunks dos arquivos, mas altera a parformace ao decorrer do tempo.
 #garantir o offset das chunks, de tal forma que quando chegar no dispositivo B, ele possa reorganziar a ordem das chunks para fazer a reconstrução dos dados.
 #melhorar o modelo de produtor consumidor
+
+#problema é que o chekingfile não está contando ou melhor consumindo todos as sentinelas, como os valores estao ordenados, 
+#ele consome os 3 primerios valores que são os arquivos e quando ela se depara com o none, ela fecha de forma incorreta. 
