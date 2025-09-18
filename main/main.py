@@ -52,16 +52,7 @@ class server:
                     except StopIteration:
                         #await listqueue.put(None)
                         break
-                #print(listqueue)
-                #lembrete de gerenciar as corroutines para que possam ser encerradas de forma segura
-            #for _ in range(len(values)):
-                #self.value = await asyncio.to_thread(checkingfile.checking,dire,await listqueue.get())
 
-                #if(self.value):
-                 #   await chekedqueue.put(self.value)
-                
-        #self.inputed="q"
-    
     async def chekingfiles(self, dire:str):
         #lenghts = listqueue.qsize()
         #while True:
@@ -87,32 +78,15 @@ class server:
 
             if(tobecheck is None):
                 #listqueue.task_done()
+                await chekedqueue.put(None)
                 break
             #print(listqueue)
-        
-        print(listqueue)
 
-    """match(option):
-
-                case "1":
-                    if(self.inputed == "q"):
-                        await chekedqueue.put(None)
-                    
-                    if(not self.value):
-                     await chekedqueue.put(False)
-                
-                case "2":
-                    #needs to be fixed
-                    #for _ in range(3):
-                    await chekedqueue.put(None)
-        else:
-         await chekedqueue.put(False)"""
-
-        #print(chekedqueue)
-    async def reading(self,corroutine=1):
+    async def reading(self):
         while True:    
             recived = await chekedqueue.get()
-            
+            chekedqueue.task_done()
+
             match(recived):
                 case recived if(recived is not None and
                                  recived ):
@@ -126,10 +100,6 @@ class server:
                     print(f"\n file not found or is a folder")
             
                 case recived if(recived is None):
-                    for _ in range(corroutine):
-                        #await chekedqueue.put(None)
-                        await sentinel.put(None)
-                        #print(sentinel)
                     break
 
         print(sentinel)
@@ -140,13 +110,7 @@ class server:
 
         while True:
             files = await readingqueue.get()
-            #sentinels = await sentinel.get()
-            #print(sentinels)
-            #print(files[1])
-            #print(readingqueue)
-            #kb+=2
-            
-            #for c in await asyncio.to_thread(chunks.chunking,files[1],files[0],kb):
+
             for c in range(0,len(files[1]),kb):
 
                 await consumer.put((files[0],files[1][c:c+kb]))
@@ -166,12 +130,7 @@ class server:
                 if(value is None):
                   break
 
-
-            #print(value.index(value[1]))
-            #print(value[1])
     async def main(self):
-        #global corroutine
-        
         choice= input("1: select one file each \n 2: choose all file \n 3: q to quit:")
 
         match(choice):
@@ -184,12 +143,6 @@ class server:
                     
                     await asyncio.gather(self.chekingfiles(current_path))
                     await asyncio.gather(self.reading())
-                    #await asyncio.gather(self.chunking())
-                    #print(consumer)
-                    #await asyncio.gather(self.sending())
-                    #await asyncio.gather(self.block_cheking(choice,self.data, current_path),self.reading())
-
-                    #awaiting_response = await sentinel.get()#problema aqui
 
                     if(self.inputed == "q"):
                         break
@@ -204,15 +157,12 @@ class server:
                 
                 for _ in range(5):
                     producers.append(self.producer(listsfiles,choice))
-                
-                #await asyncio.gather(*producers)
-                #await asyncio.gather(self.chekingfiles(current_path))
-                
-                a = 5
+                #a = 5
                 for _ in range(5):
                    consumers.append(self.chekingfiles(current_path))
-                #for _ in range(a):
-                 #   readers.append(self.reading(a))
+                
+                for _ in range(5):
+                 readers.append(self.reading())
                 
                 #await asyncio.gather(*readers)
 
@@ -228,7 +178,7 @@ class server:
                 for _ in range(5):
                     await listqueue.put(None)
                 
-                await asyncio.gather(*readers)
+                await asyncio.gather(*consumers,*readers)
 
                 #await asyncio.gather(self.chekingfiles(current_path))
                 #await asyncio.gather(self.chekingfiles(current_path))
