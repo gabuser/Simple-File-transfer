@@ -100,6 +100,7 @@ class server:
                     print(f"\n file not found or is a folder")
             
                 case recived if(recived is None):
+                    await readingqueue.put(None)
                     break
     
     async def chunking(self):
@@ -139,7 +140,7 @@ class server:
                     
                     await asyncio.gather(self.chekingfiles(current_path))
                     await asyncio.gather(self.reading())
-
+                    await asyncio.gather(self.chunking(),self.sending())
                     if(self.inputed == "q"):
                         break
             

@@ -1,9 +1,9 @@
 def searchfile(file:str,path:list) ->str| bool:
     appendfiles = list()
-    fileslists = sorted(path)
+    fileslists =sorted(path)
     
     starts = 0 
-    endlist = len(path)-1 
+    endlist = len(list(path))-1 
 
     if(file !="q"):
         while(starts <= endlist):
