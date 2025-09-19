@@ -101,27 +101,23 @@ class server:
             
                 case recived if(recived is None):
                     break
-
-        print(sentinel)
     
-
-    async def chunking(self,corroutine=1):
+    async def chunking(self):
         global kb
 
         while True:
             files = await readingqueue.get()
+            readingqueue.task_done()
 
-            for c in range(0,len(files[1]),kb):
+            if(files is not None):
+                for c in range(0,len(files[1]),kb):
 
-                await consumer.put((files[0],files[1][c:c+kb]))
-            
+                    await consumer.put((files[0],files[1][c:c+kb]))
+
             if(files is None):
-                print(consumer)
-                for _ in range(corroutine):
-                    await consumer.put(None)
-                    print(consumer)
+                await consumer.put(None)
                 break
-    
+
     async def sending(self):
             while True:
                 value = await consumer.get()
@@ -166,13 +162,13 @@ class server:
                 
                 #await asyncio.gather(*readers)
 
-                #for _ in range(a):
-                 #  chunkers.append(self.chunking(a))
+                for _ in range(5):
+                  chunkers.append(self.chunking())
                 
                 #await asyncio.gather(*chunkers)
 
-                #for _ in range(_):
-                 #   senders.append(self.sending())
+                for _ in range(5):
+                 senders.append(self.sending())
                 
                 await asyncio.gather(*producers)
                 for _ in range(5):
@@ -180,6 +176,10 @@ class server:
                 
                 await asyncio.gather(*consumers,*readers)
 
+                for _ in range(5):
+                    await readingqueue.put(None)
+                
+                await asyncio.gather(*chunkers,*senders)
                 #await asyncio.gather(self.chekingfiles(current_path))
                 #await asyncio.gather(self.chekingfiles(current_path))
                 #await asyncio.gather(*readers)
