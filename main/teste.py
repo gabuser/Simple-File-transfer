@@ -18,12 +18,14 @@ def chunks():
                 break
 
 for cp in chunks():
-    time.sleep(1)
+    #time.sleep(1)
     for a in cp:
-         print(a)
+         #print(a)
+         pass
     #counting2+=20"""
 
-
+tuples = ("mario","ola.txt")
+print(tuples.index("mario"))
 """a lógica para fazer o fatiamento está sendo feita de maneira manual, mas no teoria não precisa fazer isso:
 o for itera sobre os valores começando do zero indo até índice 20, ele divide a lista em 20 pedaços a cada iteração e retorna
 fazendo um fatiamento de listas, o número 20 especifica quantos elementos serão divididos a cada iteração, cada uma vai conter
