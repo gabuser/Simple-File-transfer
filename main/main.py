@@ -54,17 +54,6 @@ class server:
                         break
 
     async def chekingfiles(self, dire:str):
-        #lenghts = listqueue.qsize()
-        #while True:
-        #tobecheck= await listqueue.get()
-        #for _ in range(lenghts):
-        #listqueue.task_done()
-        #value=await listqueue.get()
-        #print(value)
-            
-        #print(listqueue)
-        #print(chekedqueue)
-        #print(lenghts)
         while True:
             #print(listqueue.task_done())
             tobecheck = await listqueue.get()
@@ -154,22 +143,10 @@ class server:
                 
                 for _ in range(5):
                     producers.append(self.producer(listsfiles,choice))
-                #a = 5
-                for _ in range(5):
-                   consumers.append(self.chekingfiles(current_path))
-                
-                for _ in range(5):
-                 readers.append(self.reading())
-                
-                #await asyncio.gather(*readers)
-
-                for _ in range(5):
-                  chunkers.append(self.chunking())
-                
-                #await asyncio.gather(*chunkers)
-
-                for _ in range(5):
-                 senders.append(self.sending())
+                    consumers.append(self.chekingfiles(current_path))
+                    readers.append(self.reading())
+                    chunkers.append(self.chunking())
+                    senders.append(self.sending())
                 
                 await asyncio.gather(*producers)
                 for _ in range(5):
