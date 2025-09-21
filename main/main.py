@@ -21,9 +21,9 @@ listqueue = asyncio.Queue()
 sentinel = asyncio.Queue()
 consumer = asyncio.Queue()
 
-kb = 2
+kb = 8192
 
-class server:
+class Client:
     async def block_search(self,lists:list):
         self.data = await asyncio.to_thread(binarysearch.searchfile,self.inputed, lists)
         #print(self.data)
@@ -80,10 +80,10 @@ class server:
                 case recived if(recived is not None and
                                  recived ):
                     
-                        async with aiofiles.open(recived,"rb") as opening:
+                        async with aiofiles.open(recived,"r") as opening:
                             readingmode = await opening.read(8192)
                             await readingqueue.put((recived,readingmode))
-                        print(readingqueue)
+                        #print(readingqueue)
             
                 case recived if(type(recived) is bool):
                     print(f"\n file not found or is a folder")
@@ -108,13 +108,30 @@ class server:
                 await consumer.put(None)
                 break
 
-    async def sending(self):
-            while True:
-                value = await consumer.get()
-                print(value)
+    async def sending(self,PORT:int, address:str):
+        recived,sender = await asyncio.open_connection(
+            address,PORT
+        )
 
-                if(value is None):
-                  break
+        while True:
+            value = await consumer.get()
+            #if(value is not None):
+                #print(value[1])
+            
+            if(value is not None):
+
+                print(f'sending:{value}')
+                sender.write(value[1].encode())
+                await sender.drain()
+
+                torecive= await recived.read(kb)
+                print(f'downloading:{torecive.decode()}')
+
+                sender.close()
+                await sender.wait_closed()
+
+            if(value is None):
+                break
 
     async def main(self):
         choice= input("1: select one file each \n 2: choose all file \n 3: q to quit:")
@@ -146,7 +163,7 @@ class server:
                     consumers.append(self.chekingfiles(current_path))
                     readers.append(self.reading())
                     chunkers.append(self.chunking())
-                    senders.append(self.sending())
+                    senders.append(self.sending(8000,"localhost"))
                 
                 await asyncio.gather(*producers)
                 for _ in range(5):
@@ -179,7 +196,7 @@ class server:
                 #await asyncio.gather(self.producer())"""
                 
 
-running= server()
+running= Client()
 
 asyncio.run(running.main())
 

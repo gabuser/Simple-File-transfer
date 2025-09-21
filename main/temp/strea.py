@@ -3,7 +3,7 @@ import asyncio
 async def tcp_echo_client(message):
     #função cliente que vai abrir uma conexão, isso é, tentar se conectar ao servidor no endereço e porta fornecido
     reader, writer = await asyncio.open_connection(
-        '127.0.0.1', 8888)
+        'localhost', 8888)
     
     #emula uma notificação de mensagem que vai ser enviada
     print(f'Send: {message!r}')
