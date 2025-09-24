@@ -7,15 +7,20 @@ class Server:
     async def handle_connections(self,header:str,running:int):
         try:
             file = await header.read(8192)
+            filename = loads(file)
+
+            async with aiofiles.open(filename[0],"ab") as save:
+                await save.write(filename[1])
+            
             running.write(file)
             await running.drain()
 
         #data = await header.read(8192)
         #decoding = file.decode()
-            data = loads(file)
+            #data = loads(file[1])
             #print(data[1])
-            async with aiofiles.open(data[0],"a") as save:
-                await save.write(data[1])
+            """async with aiofiles.open(filename,"a") as save:
+                await save.write(data)"""
 
             #running.write(file)
             #await running.drain()
