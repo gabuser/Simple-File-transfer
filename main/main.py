@@ -80,7 +80,7 @@ class Client:
                 case recived if(recived is not None and
                                  recived ):
                     
-                        async with aiofiles.open(recived,"rb") as opening:
+                        async with aiofiles.open(recived,"r") as opening:
                             readingmode = await opening.read(8192)
                             await readingqueue.put((recived,readingmode))
                         #print(readingqueue)
