@@ -32,14 +32,14 @@ class Server:
             pass
             #scritpt for writing the data
             
-    async def main(self):
+    async def main(self,host:str):
         server = await asyncio.start_server(
-            self.handle_connections, "localhost",8000
+            self.handle_connections, host,8000
         )
 
         async with server:
             await server.serve_forever()
 
 Servers = Server()
-
-asyncio.run(Servers.main())
+host = input("insert the host:")
+asyncio.run(Servers.main(host))

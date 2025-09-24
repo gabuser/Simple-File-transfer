@@ -154,6 +154,7 @@ class Client:
                         break
             
             case '2':
+                host = input("insert the host:")
                 producers= list()
                 consumers = list()
                 readers = list()
@@ -166,7 +167,7 @@ class Client:
                     consumers.append(self.chekingfiles(current_path))
                     readers.append(self.reading())
                     chunkers.append(self.chunking())
-                    senders.append(self.sending(8000,"localhost"))
+                    senders.append(self.sending(8000,host))
                 
                 await asyncio.gather(*producers)
                 for _ in range(5):
