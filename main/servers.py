@@ -1,19 +1,23 @@
 import asyncio 
+from pickle import loads
 
 class Server:
 
-    async def handle_connections(self,host:str,running:int):
-        data = await host.read(8192)
-        decoding = data.decode()
+    async def handle_connections(self,header:str,running:int):
+        try:
+            file = await header.read(8192)
+        #data = await header.read(8192)
+        #decoding = file.decode()
 
-        print(f'recived file chunk:{decoding!r}')
+            print(f'recived file chunk:{loads(file)}')
 
-        running.write(data)
-        await running.drain()
+            running.write(file)
+            await running.drain()
 
-        running.close()
-        await running.wait_closed()
-
+        except EOFError:
+            print("all recived")
+            #scritpt for writing the data
+            
     async def main(self):
         server = await asyncio.start_server(
             self.handle_connections, "localhost",8000

@@ -5,7 +5,7 @@ from os import chdir,listdir,getcwd
 from os import path
 import asyncio 
 import aiofiles
-
+from pickle import dumps
 #paths = getcwd()
 
 #directory = chdir(f"{paths}/main/utils")
@@ -80,7 +80,7 @@ class Client:
                 case recived if(recived is not None and
                                  recived ):
                     
-                        async with aiofiles.open(recived,"r") as opening:
+                        async with aiofiles.open(recived,"rb") as opening:
                             readingmode = await opening.read(8192)
                             await readingqueue.put((recived,readingmode))
                         #print(readingqueue)
@@ -89,7 +89,7 @@ class Client:
                     print(f"\n file not found or is a folder")
             
                 case recived if(recived is None):
-                    await readingqueue.put(None)
+                    #await readingqueue.put(None)
                     break
     
     async def chunking(self):
@@ -115,22 +115,25 @@ class Client:
 
         while True:
             value = await consumer.get()
+            consumer.task_done()
             #if(value is not None):
                 #print(value[1])
             
             if(value is not None):
 
-                print(f'sending:{value}')
-                sender.write(value[1].encode())
+                #print(f'sending:{value[0]}')
+                sender.write(dumps(value))
                 await sender.drain()
+                #await sender.drain()
 
                 torecive= await recived.read(kb)
-                print(f'downloading:{torecive.decode()}')
+                print(f'downloading:{torecive}')
 
                 sender.close()
                 await sender.wait_closed()
-
+            
             if(value is None):
+                print(consumer)
                 break
 
     async def main(self):
@@ -174,7 +177,8 @@ class Client:
                 for _ in range(5):
                     await readingqueue.put(None)
                 
-                await asyncio.gather(*chunkers,*senders)
+                await asyncio.gather(*chunkers)
+                await asyncio.gather(*senders)
                 #await asyncio.gather(self.chekingfiles(current_path))
                 #await asyncio.gather(self.chekingfiles(current_path))
                 #await asyncio.gather(*readers)
