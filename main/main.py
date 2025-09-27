@@ -122,19 +122,21 @@ class Client:
             if(value is not None):
 
                 #print(f'sending:{value[0]}')
-                sender.write(dumps(value))
+                #sender.write(pack(value[0]))
+                sender.write(value[0].encode()+b"\n")
+                sender.write(value[1])
                 await sender.drain()
                 #await sender.drain()
 
                 torecive= await recived.read(kb)
                 print(f'downloading:{torecive}')
-
-                sender.close()
-                await sender.wait_closed()
             
             if(value is None):
                 print(consumer)
                 break
+        
+        #sender.close()
+        #await sender.wait_closed()
 
     async def main(self):
         choice= input("1: select one file each \n 2: choose all file \n 3: q to quit:")

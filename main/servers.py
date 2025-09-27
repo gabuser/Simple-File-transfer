@@ -6,15 +6,20 @@ class Server:
 
     async def handle_connections(self,header:str,running:int):
         try:
-            file = await header.read(8192)
-            filename = loads(file)
+            #file = await header.read(8192)
+            filebinary= await header.readuntil(b'\n')
+            filetext = filebinary.decode()
 
-            async with aiofiles.open(filename[0],"ab") as save:
-                await save.write(filename[1])
+            content = await header.read(8192)
+            #filename = unpack("!Q",file)
+            async with aiofiles.open(filetext.replace("\n",""),"ab") as save:
+                await save.write(content)
             
-            running.write(file)
+            running.write(filebinary)
             await running.drain()
 
+            #running.close()
+            #await running.wait_closed()
         #data = await header.read(8192)
         #decoding = file.decode()
             #data = loads(file[1])
@@ -32,7 +37,7 @@ class Server:
             pass
             #scritpt for writing the data
             
-    async def main(self,host:str):
+    async def main(self,host):
         server = await asyncio.start_server(
             self.handle_connections, host,8000
         )
@@ -43,3 +48,4 @@ class Server:
 Servers = Server()
 host = input("insert the host:")
 asyncio.run(Servers.main(host))
+#precisar enviar o tamanho do arquivo binário de tal forma que uma não sobreponha ou leia a parte do outro e causar deadlocks
