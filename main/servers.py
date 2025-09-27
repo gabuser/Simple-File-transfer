@@ -18,8 +18,8 @@ class Server:
             running.write(filebinary)
             await running.drain()
 
-            #running.close()
-            #await running.wait_closed()
+            running.close()
+            await running.wait_closed()
         #data = await header.read(8192)
         #decoding = file.decode()
             #data = loads(file[1])
